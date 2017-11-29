@@ -1,0 +1,7 @@
+*.pyc
+models/
+.build_release/
+build
+python/caffe/_caffe.so
+python/caffe/proto/
+*.flo
