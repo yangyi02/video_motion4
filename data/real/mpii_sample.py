@@ -9,13 +9,13 @@ logging.basicConfig(format='[%(levelname)s %(asctime)s %(filename)s:%(lineno)s] 
                             level=logging.INFO)
 
 
-class Mpii64Sample(RealData):
+class MpiiSample(RealData):
     def __init__(self, args):
-        super(Mpii64Sample, self).__init__(args)
-        self.name = 'mpii64_sample'
+        super(MpiiSample, self).__init__(args)
+        self.name = 'mpii_sample'
         script_dir = os.path.dirname(__file__)  # absolute dir the script is in
-        self.train_dir = '/home/yi/code/video_motion_data/mpii64-train'
-        self.test_dir = os.path.join(script_dir, 'mpii64-test-sample')
+        self.train_dir = '/home/yi/code/video_motion_data/mpii%d-train' % args.resolution
+        self.test_dir = os.path.join(script_dir, 'mpii%d-test-sample' % args.resolution)
         self.train_images = self.get_meta(self.train_dir)
         self.test_images = self.get_meta(self.test_dir)
         if args.fixed_data:
@@ -63,7 +63,7 @@ class Mpii64Sample(RealData):
 def unit_test():
     args = learning_args.parse_args()
     logging.info(args)
-    data = Mpii64Sample(args)
+    data = MpiiSample(args)
     im = data.get_next_batch(data.test_images)
     data.display(im)
 

@@ -110,6 +110,7 @@ class BaseVisualizer(object):
         img[y1:y2, x1:x2, :] = appear_map
 
         if self.save_display:
+            img = numpy.pad(img, [(1, 1), (1, 1), (0, 0)], 'constant')
             img = img * 255.0
             img = img.astype(numpy.uint8)
             img = Image.fromarray(img)

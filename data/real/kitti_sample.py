@@ -10,12 +10,12 @@ logging.basicConfig(format='[%(levelname)s %(asctime)s %(filename)s:%(lineno)s] 
                             level=logging.INFO)
 
 
-class Kitti128Sample(RealData):
+class KittiSample(RealData):
     def __init__(self, args):
-        super(Kitti128Sample, self).__init__(args)
-        self.name = 'kitti128_sample'
-        self.train_dir = '/home/yi/code/video_motion_data/kitti128-train'
-        self.test_dir = '/home/yi/code/video_motion_data/kitti128-test'
+        super(KittiSample, self).__init__(args)
+        self.name = 'kitti_sample'
+        self.train_dir = '/home/yi/code/video_motion_data/kitti%d-train' % args.resolution
+        self.test_dir = '/home/yi/code/video_motion_data/kitti%d-test' % args.resolution
         self.gt_dir = '/media/yi/DATA/data-orig/kitti_flow/kitti_stereo_flow/training/flow_noc'
         self.train_images = self.get_meta(self.train_dir)
         self.test_images = self.get_meta(self.test_dir)
@@ -84,7 +84,7 @@ class Kitti128Sample(RealData):
 def unit_test():
     args = learning_args.parse_args()
     logging.info(args)
-    data = Kitti128Sample(args)
+    data = KittiSample(args)
     im = data.get_next_batch(data.test_images)
     data.display(im)
 

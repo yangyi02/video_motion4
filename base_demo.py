@@ -10,6 +10,7 @@ import torch.nn.functional as F
 from learning_args import parse_args
 from data.synthetic.box_data import BoxData
 from data.synthetic.mnist_data import MnistData
+from data.synthetic.chair_data import ChairData
 from data.real.robot_data import RobotData
 from data.real.robotc_data import RobotcData
 from data.real.mpii_data import MpiiData
@@ -45,6 +46,8 @@ class BaseDemo(object):
             self.data = BoxData(args)
         elif args.data == 'mnist':
             self.data = MnistData(args)
+        elif args.data == 'chair':
+            self.data = ChairData(args)
         elif args.data == 'robot':
             self.data = RobotData(args)
         elif args.data == 'robotc':
@@ -83,7 +86,7 @@ class BaseDemo(object):
         base_loss, train_loss = [], []
         for epoch in range(self.train_epoch):
             optimizer.zero_grad()
-            if self.data.name in ['box', 'mnist']:
+            if self.data.name in ['box', 'mnist', 'chair']:
                 im, _, _, _ = self.data.get_next_batch(self.data.train_images)
             elif self.data.name in ['robot', 'mpii', 'viper', 'kitti', 'robotc']:
                 im = self.data.get_next_batch(self.data.train_images)
@@ -134,7 +137,7 @@ class BaseDemo(object):
         test_epe = []
         motion = None
         for epoch in range(self.test_epoch):
-            if self.data.name in ['box', 'mnist']:
+            if self.data.name in ['box', 'mnist', 'chair']:
                 im, motion, _, _ = self.data.get_next_batch(self.data.test_images)
             elif self.data.name in ['robot', 'mpii', 'viper', 'kitti', 'robotc']:
                 im, motion = self.data.get_next_batch(self.data.test_images), None
@@ -191,14 +194,12 @@ class BaseDemo(object):
         base_loss, test_loss = [], []
         test_epe = []
         for epoch in range(self.test_epoch):
-            if self.data.name in ['box', 'mnist', 'box_complex']:
+            if self.data.name in ['box', 'mnist', 'chair']:
                 im, motion, motion_label, _ = self.data.get_next_batch(self.data.test_images)
                 gt_motion_label = motion_label[:, -2, :, :, :]
                 gt_motion_label = Variable(torch.from_numpy(gt_motion_label))
                 if torch.cuda.is_available():
                     gt_motion_label = gt_motion_label.cuda()
-            elif self.data.name in ['box2', 'mnist2']:
-                im, motion, _ = self.data.get_next_batch(self.data.test_images)
             else:
                 logging.error('%s data not supported in test_gt' % self.data.name)
                 sys.exit()
@@ -211,10 +212,8 @@ class BaseDemo(object):
             if torch.cuda.is_available():
                 im_input, im_output = im_input.cuda(), im_output.cuda()
                 gt_motion = gt_motion.cuda()
-            if self.data.name in ['box', 'mnist', 'box_complex']:
+            if self.data.name in ['box', 'mnist', 'chair']:
                 im_pred, m_mask, disappear, appear = self.model_gt(im_input, gt_motion_label, 'label')
-            elif self.data.name in['box2', 'mnist2']:
-                im_pred, m_mask, disappear, appear = self.model_gt(im_input, gt_motion)
             loss = torch.abs(im_pred - im_output).sum()
 
             test_loss.append(loss.data[0])

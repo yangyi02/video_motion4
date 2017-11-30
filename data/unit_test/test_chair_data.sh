@@ -11,4 +11,3 @@ python ../../data/synthetic/chair_data.py --batch_size=3 --image_size=128 --moti
 python ../../data/synthetic/chair_data.py --batch_size=4 --image_size=256 --motion_range=4 --num_frame=4 --num_objects=4 --bg_move --save_display --save_display_dir=./
 
 sh trim.sh
-
