@@ -188,29 +188,22 @@ class Synthetic2Data(object):
                 mask_new[i, j, :, :, :] = mask_big[i, j, :, y:y + im_size, x:x + im_size]
         return mask_new
 
-    def move_background(self, src_image, src_motion, src_motion_label, m_x, m_y):
+    def move_background(self, src_bg, src_motion, src_motion_label, m_x, m_y):
         batch_size, num_frame, im_size = self.batch_size, self.num_frame, self.im_size
         im = numpy.zeros((num_frame, batch_size, self.im_channel, im_size, im_size))
         motion = numpy.zeros((num_frame, batch_size, 2, im_size, im_size))
         motion_label = numpy.zeros((num_frame, batch_size, 1, im_size, im_size))
+        height, width = src_bg.shape[2], src_bg.shape[3]
+        xc, yc = numpy.ones((batch_size)) * width / 2, numpy.ones((batch_size)) * height / 2
+        xc, yc = xc.astype(numpy.int), yc.astype(numpy.int)
         for i in range(num_frame):
-            im[i, :, :, :, :] = src_image
-            src_image = self.move_image_bg(src_image, m_x, m_y)
+            x1, y1, x2, y2 = xc - im_size / 2, yc - im_size / 2, xc + im_size / 2, yc + im_size / 2
+            for j in range(batch_size):
+                im[i, j, :, :, :] = src_bg[j, :, y1[j]:y2[j], x1[j]:x2[j]]
             motion[i, :, :, :, :] = src_motion
             motion_label[i, :, :, :, :] = src_motion_label
+            xc, yc = xc + m_x[0, :], yc + m_y[0, :]
         return im, motion, motion_label
-
-    def move_image_bg(self, bg_im, m_x, m_y):
-        batch_size, im_size, m_range = self.batch_size, self.im_size, self.m_range
-        im_channel = self.im_channel
-        im_big = numpy.zeros((batch_size, im_channel, im_size + m_range * 2, im_size + m_range * 2))
-        im_big[:, :, m_range:-m_range, m_range:-m_range] = bg_im
-        im_new = numpy.zeros((batch_size, im_channel, im_size, im_size))
-        for i in range(batch_size):
-            x = m_range + m_x[0, i]
-            y = m_range + m_y[0, i]
-            im_new[i, :, :, :] = im_big[i, :, y:y + im_size, x:x + im_size]
-        return im_new
 
     def display(self, im, motion, seg_layer):
         num_frame = self.num_frame

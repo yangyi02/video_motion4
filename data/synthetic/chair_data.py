@@ -18,6 +18,7 @@ class ChairData(Synthetic2Data):
         self.bg_dir = '/media/yi/DATA/data-orig/non_person_images'
         self.train_images = self.get_meta(self.fg_dir, self.bg_dir)
         self.test_images = self.get_meta(self.fg_dir, self.bg_dir)
+        self.m_range = args.motion_range
         self.resolution = args.resolution
         if args.fixed_data:
             numpy.random.seed(args.seed)
@@ -69,10 +70,13 @@ class ChairData(Synthetic2Data):
                 src_fg[i, j, :, :, :] = self.shift_image(src_fg[i, j, :, :, :], shift, max_shift)
                 src_mask[i, j, :, :, :] = self.shift_image(src_mask[i, j, :, :, :], shift, max_shift)
         # generate source bg image
-        src_bg = numpy.zeros((batch_size, self.im_channel, im_size, im_size))
+        m_range, num_frame = self.m_range, self.num_frame
+        min_im_size = im_size + 2 * (num_frame - 1) * m_range
+        src_bg = numpy.zeros((batch_size, self.im_channel, min_im_size, min_im_size))
         image_names = meta['bg']
         idx = numpy.random.permutation(len(image_names))
-        for j in range(batch_size):
+        i, j = 0, 0
+        while i < batch_size:
             if im_channel == 1:
                 image = numpy.array(Image.open(image_names[idx[j]]).convert('L'))
                 image = numpy.expand_dims(image, 3)
@@ -80,10 +84,14 @@ class ChairData(Synthetic2Data):
                 image = numpy.array(Image.open(image_names[idx[j]]))
             image = image / 255.0
             height, width = image.shape[0], image.shape[1]
-            idx_h = numpy.random.randint(0, height + 1 - im_size)
-            idx_w = numpy.random.randint(0, width + 1 - im_size)
+            if height < min_im_size or width < min_im_size:
+                j += 1
+                continue
+            idx_h = numpy.random.randint(0, height + 1 - min_im_size)
+            idx_w = numpy.random.randint(0, width + 1 - min_im_size)
             image = image.transpose((2, 0, 1))
-            src_bg[j, :, :, :] = image[:, idx_h:idx_h + im_size, idx_w:idx_w + im_size]
+            src_bg[i, :, :, :] = image[:, idx_h:idx_h + min_im_size, idx_w:idx_w + min_im_size]
+            i += 1
         return src_fg, src_mask, src_bg
 
     @staticmethod
