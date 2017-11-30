@@ -32,7 +32,7 @@ def parse_args():
     arg_parser.add_argument('--motion_range', type=int, default=1)
     arg_parser.add_argument('--num_frame', type=int, default=3)
     arg_parser.add_argument('--resolution', type=int, default=256)
-    arg_parser.add_argument('--net_depth', type=int, default=6)
+    arg_parser.add_argument('--net_depth', type=int, default=11)
 
     arg_parser.add_argument('--data', default='box')
     arg_parser.add_argument('--num_objects', type=int, default=1)
