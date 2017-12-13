@@ -20,7 +20,7 @@
 | 04   |  |  |  | chair, m_range=2, batch_size=32, image_size=128, num_frame=2 |
 | 05   |  |  |  | chair, m_range=2, batch_size=64, image_size=128, num_frame=2 |
 | 06   |  |  |  | chair, m_range=2, batch_size=32, image_size=128, num_frame=2, net_depth=13 |
-| 07   |  |  |  | chair, m_range=2, batch_size=64, image_size=128, num_frame=2, net_depth=13 |
+| 07   |  |  |  | chair, m_range=2, batch_size=32, image_size=128, num_frame=2, bg_move |
 | 08   |  |  |  | chair, m_range=2, batch_size=32, image_size=128, num_frame=2, net_depth=13, bg_move |
 
 ### Take Home Message

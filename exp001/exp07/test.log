@@ -1,0 +1,164 @@
+[INFO 2017-12-01 17:02:13,259 demo.py:203] Namespace(augment_reverse=False, batch_size=32, bg_move=True, bg_noise=0.5, data='chair', diff_div_thresh=1.25, display=True, display_all=False, fg_noise=0.1, fixed_data=False, image_channel=3, image_size=128, init_model_path='./model.pth', learning_rate=0.001, max_diff_thresh=0.1, min_diff_thresh=0.01, motion_range=2, net_depth=11, num_frame=2, num_objects=1, rand_noise=0, resolution=256, save_dir='./', save_display=True, save_display_dir='./', save_interval=100, seed=111, tensorboard_path='tensorboard/demo', test=True, test_all=False, test_epoch=20, test_gt=False, test_interval=100, train=False, train_epoch=1000)
+[INFO 2017-12-01 17:02:34,035 demo.py:142] average test loss: 628.12, base loss: 3236.95
+[INFO 2017-12-01 17:02:34,035 demo.py:143] improve_loss: 2608.83, improve_percent: 0.81
+[INFO 2017-12-01 17:02:34,035 demo.py:146] average test endpoint error: 0.54
+max flow: 3.5142
+flow range:
+u = -0.998 .. 2.440
+v = -3.014 .. 1.874
+max flow: 2.8284
+flow range:
+u = 2.000 .. 2.000
+v = -2.000 .. 1.000
+max flow: 2.4846
+flow range:
+u = -0.550 .. 2.264
+v = -0.842 .. 1.531
+max flow: 2.2361
+flow range:
+u = 1.000 .. 2.000
+v = 0.000 .. 1.000
+max flow: 2.6199
+flow range:
+u = -1.079 .. 1.168
+v = -2.488 .. 2.618
+max flow: 2.0000
+flow range:
+u = 0.000 .. 0.000
+v = -1.000 .. 2.000
+max flow: 2.4585
+flow range:
+u = -1.175 .. 0.574
+v = -0.444 .. 2.452
+max flow: 2.2361
+flow range:
+u = -1.000 .. 0.000
+v = 2.000 .. 2.000
+max flow: 2.8744
+flow range:
+u = -1.482 .. 1.857
+v = -0.907 .. 2.588
+max flow: 2.2361
+flow range:
+u = -1.000 .. 1.000
+v = 0.000 .. 2.000
+max flow: 3.4901
+flow range:
+u = -1.176 .. 2.573
+v = -2.809 .. 0.224
+max flow: 2.2361
+flow range:
+u = -1.000 .. 2.000
+v = -1.000 .. 0.000
+max flow: 2.7335
+flow range:
+u = -0.337 .. 1.806
+v = -0.682 .. 2.441
+max flow: 2.2361
+flow range:
+u = 1.000 .. 1.000
+v = 2.000 .. 2.000
+max flow: 2.7734
+flow range:
+u = -0.849 .. 0.992
+v = -0.742 .. 2.756
+max flow: 2.0000
+flow range:
+u = 0.000 .. 0.000
+v = 0.000 .. 2.000
+max flow: 2.9228
+flow range:
+u = -1.559 .. 2.652
+v = -1.767 .. 0.881
+max flow: 2.0000
+flow range:
+u = -1.000 .. 2.000
+v = -1.000 .. 0.000
+max flow: 2.3634
+flow range:
+u = -1.715 .. 1.395
+v = -2.337 .. 1.068
+max flow: 1.4142
+flow range:
+u = -1.000 .. 1.000
+v = -1.000 .. 0.000
+max flow: 3.3328
+flow range:
+u = -2.864 .. 0.684
+v = -2.463 .. 2.372
+max flow: 2.8284
+flow range:
+u = -2.000 .. -2.000
+v = -1.000 .. 2.000
+max flow: 2.4299
+flow range:
+u = -2.030 .. 2.069
+v = -1.750 .. 0.379
+max flow: 2.0000
+flow range:
+u = -1.000 .. 2.000
+v = -1.000 .. 0.000
+max flow: 3.3449
+flow range:
+u = -2.607 .. 2.189
+v = -2.511 .. 2.279
+max flow: 2.8284
+flow range:
+u = -2.000 .. -2.000
+v = -2.000 .. -2.000
+max flow: 3.5151
+flow range:
+u = -2.749 .. 0.528
+v = -0.447 .. 2.570
+max flow: 2.8284
+flow range:
+u = -2.000 .. 0.000
+v = 1.000 .. 2.000
+max flow: 2.0610
+flow range:
+u = -0.528 .. 1.516
+v = -1.770 .. 0.787
+max flow: 1.4142
+flow range:
+u = 0.000 .. 1.000
+v = -1.000 .. 0.000
+max flow: 2.7810
+flow range:
+u = -1.704 .. 2.494
+v = -1.917 .. 1.411
+max flow: 2.2361
+flow range:
+u = -1.000 .. 2.000
+v = -1.000 .. -1.000
+max flow: 3.1781
+flow range:
+u = -2.843 .. 1.919
+v = -2.011 .. 2.114
+max flow: 2.8284
+flow range:
+u = -2.000 .. -2.000
+v = 1.000 .. 2.000
+max flow: 3.6429
+flow range:
+u = -2.000 .. 2.413
+v = -3.181 .. 0.213
+max flow: 2.2361
+flow range:
+u = -1.000 .. 2.000
+v = -2.000 .. -1.000
+max flow: 3.3053
+flow range:
+u = -2.565 .. 1.664
+v = -3.004 .. 2.772
+max flow: 2.2361
+flow range:
+u = -1.000 .. 1.000
+v = -2.000 .. 2.000
+max flow: 3.3637
+flow range:
+u = -1.499 .. 2.193
+v = -2.735 .. 1.178
+max flow: 2.8284
+flow range:
+u = -1.000 .. 2.000
+v = -2.000 .. -2.000

@@ -49,7 +49,7 @@ def parse_args():
     arg_parser.add_argument('--fixed_data', action='store_true')
     arg_parser.add_argument('--seed', type=int, default=111)
 
-    arg_parser.add_argument('--tensorboard_name', default='demo')
+    arg_parser.add_argument('--tensorboard_path', default='tensorboard/demo')
 
     args = arg_parser.parse_args()
 

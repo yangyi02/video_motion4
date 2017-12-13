@@ -43,7 +43,7 @@ class BaseDemo(object):
         self.num_frame = args.num_frame
         self.m_range = args.motion_range
         self.net_depth = args.net_depth
-        self.tensorboard_name = args.tensorboard_name
+        self.tensorboard_path = args.tensorboard_path
         if args.data == 'box':
             self.data = BoxData(args)
         elif args.data == 'mnist':
@@ -84,8 +84,7 @@ class BaseDemo(object):
         return self.model, self.model_gt
 
     def train(self):
-        script_dir = os.path.dirname(__file__)  # absolute dir the script is in
-        writer = SummaryWriter(os.path.join(script_dir, 'tensorboard', self.tensorboard_name))
+        writer = SummaryWriter(self.tensorboard_path)
         optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
         base_loss_all, train_loss_all = [], []
         for epoch in range(self.train_epoch):
@@ -104,7 +103,8 @@ class BaseDemo(object):
             if torch.cuda.is_available():
                 im_input, im_output = im_input.cuda(), im_output.cuda()
             im_pred, m_mask, disappear, appear = self.model(im_input)
-            loss = torch.abs(im_pred - im_output).sum() / self.batch_size
+            im_diff = im_pred - im_output
+            loss = torch.abs(im_diff).sum() / self.batch_size
             loss.backward()
             optimizer.step()
 
@@ -113,7 +113,8 @@ class BaseDemo(object):
             if len(train_loss_all) > 100:
                 train_loss_all.pop(0)
             ave_train_loss = sum(train_loss_all) / float(len(train_loss_all))
-            base_loss = torch.abs(im_input[:, -self.im_channel:, :, :] - im_output).sum() / self.batch_size
+            im_base = im_input[:, -self.im_channel:, :, :]
+            base_loss = torch.abs(im_base - im_output).sum() / self.batch_size
             base_loss_all.append(base_loss.data[0])
             if len(base_loss_all) > 100:
                 base_loss_all.pop(0)
@@ -151,7 +152,7 @@ class BaseDemo(object):
                 im, motion, _, _ = self.data.get_next_batch(self.data.test_images)
             elif self.data.name in ['robot', 'mpii', 'viper', 'kitti', 'robotc']:
                 im, motion = self.data.get_next_batch(self.data.test_images), None
-            elif self.data.name in ['mpii_sample']:
+            elif self.data.name in ['mpii_sample', 'kitti_sample']:
                 im, motion = self.data.get_next_batch(self.data.test_images), None
                 im = im[:, -self.num_frame:, :, :, :]
             else:
@@ -164,13 +165,14 @@ class BaseDemo(object):
             if torch.cuda.is_available():
                 im_input, im_output = im_input.cuda(), im_output.cuda()
             im_pred, m_mask, disappear, appear = self.model(im_input)
-            loss = torch.abs(im_pred - im_output).sum() / self.batch_size
+            flow = self.motion2flow(m_mask)
+            im_diff = im_pred - im_output
+            loss = torch.abs(im_diff).sum() / self.batch_size
 
             test_loss_all.append(loss.data[0])
             im_base = im_input[:, -self.im_channel:, :, :]
             base_loss = torch.abs(im_base - im_output).sum() / self.batch_size
             base_loss_all.append(base_loss.data[0])
-            flow = self.motion2flow(m_mask)
 
             if motion is None:
                 gt_motion = None
@@ -227,13 +229,14 @@ class BaseDemo(object):
                 gt_motion = gt_motion.cuda()
             if self.data.name in ['box', 'mnist', 'chair']:
                 im_pred, m_mask, disappear, appear = self.model_gt(im_input, gt_motion_label, 'label')
-            loss = torch.abs(im_pred - im_output).sum() / self.batch_size
+                flow = self.motion2flow(m_mask)
+            im_diff = im_pred - im_output
+            loss = torch.abs(im_diff).sum() / self.batch_size
 
             test_loss_all.append(loss.data[0])
             im_base = im_input[:, -self.im_channel:, :, :]
             base_loss = torch.abs(im_base - im_output).sum() / self.batch_size
             base_loss_all.append(base_loss.data[0])
-            flow = self.motion2flow(m_mask)
             epe = (flow - gt_motion) * (flow - gt_motion)
             epe = torch.sqrt(epe.sum(1))
             epe = epe.sum() / epe.numel()

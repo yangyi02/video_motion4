@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
 import torch.nn.functional as F
+from tensorboardX import SummaryWriter
 
 from learning_args import parse_args
 from base_demo import BaseDemo
@@ -36,8 +37,9 @@ class Demo(BaseDemo):
         return self.model, self.model_gt
 
     def train(self):
+        writer = SummaryWriter(self.tensorboard_path)
         optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
-        base_loss, train_loss = [], []
+        base_loss_all, train_loss_all = [], []
         for epoch in range(self.train_epoch):
             optimizer.zero_grad()
             if self.data.name in ['box', 'mnist', 'chair']:
@@ -55,19 +57,21 @@ class Demo(BaseDemo):
                 im_input, im_output = im_input.cuda(), im_output.cuda()
             im_pred, flow = self.model(im_input, im_output)
             im_diff = im_pred - im_input[:, -self.im_channel:, :, :]  # inverse warping loss
-            loss = torch.abs(im_diff).sum()
+            loss = torch.abs(im_diff).sum() / self.batch_size
             loss.backward()
             optimizer.step()
 
-            train_loss.append(loss.data[0])
-            if len(train_loss) > 100:
-                train_loss.pop(0)
-            ave_train_loss = sum(train_loss) / float(len(train_loss))
+            writer.add_scalar('train_loss', loss.data[0], epoch)
+            train_loss_all.append(loss.data[0])
+            if len(train_loss_all) > 100:
+                train_loss_all.pop(0)
+            ave_train_loss = sum(train_loss_all) / float(len(train_loss_all))
             im_base = im_input[:, -self.im_channel:, :, :]
-            base_loss.append(torch.abs(im_base - im_output).sum().data[0])
-            if len(base_loss) > 100:
-                base_loss.pop(0)
-            ave_base_loss = sum(base_loss) / float(len(base_loss))
+            base_loss = torch.abs(im_base - im_output).sum() / self.batch_size
+            base_loss_all.append(base_loss.data[0])
+            if len(base_loss_all) > 100:
+                base_loss_all.pop(0)
+            ave_base_loss = sum(base_loss_all) / float(len(base_loss_all))
             logging.info('epoch %d, train loss: %.2f, average train loss: %.2f, base loss: %.2f',
                          epoch, loss.data[0], ave_train_loss, ave_base_loss)
             if (epoch+1) % self.save_interval == 0:
@@ -76,11 +80,15 @@ class Demo(BaseDemo):
                     torch.save(self.model.state_dict(), handle)
             if (epoch+1) % self.test_interval == 0:
                 logging.info('epoch %d, testing', epoch)
-                self.validate()
+                test_loss, test_epe = self.validate()
+                writer.add_scalar('test_loss', test_loss, epoch)
+                if test_epe is not None:
+                    writer.add_scalar('test_epe', test_epe, epoch)
+        writer.close()
 
     def test(self):
-        base_loss, test_loss = [], []
-        test_epe = []
+        base_loss_all, test_loss_all = [], []
+        test_epe_all = []
         motion = None
         for epoch in range(self.test_epoch):
             if self.data.name in ['box', 'mnist', 'chair']:
@@ -102,11 +110,12 @@ class Demo(BaseDemo):
             im_pred, flow = self.model(im_input, im_output)
             flow = flow * self.im_size / 2  # resize flow from [-1, 1] back to image scale
             im_diff = im_pred - im_input[:, -self.im_channel:, :, :]  # inverse warping loss
-            loss = torch.abs(im_diff).sum()
+            loss = torch.abs(im_diff).sum() / self.batch_size
 
-            test_loss.append(loss.data[0])
+            test_loss_all.append(loss.data[0])
             im_base = im_input[:, -self.im_channel:, :, :]
-            base_loss.append(torch.abs(im_base - im_output).sum().data[0])
+            base_loss = torch.abs(im_base - im_output).sum() / self.batch_size
+            base_loss_all.append(base_loss.data[0])
 
             if motion is None:
                 gt_motion = None
@@ -118,7 +127,7 @@ class Demo(BaseDemo):
                 epe = (flow - gt_motion) * (flow - gt_motion)
                 epe = torch.sqrt(epe.sum(1))
                 epe = epe.sum() / epe.numel()
-                test_epe.append(epe.cpu().data[0])
+                test_epe_all.append(epe.cpu().data[0])
             if self.display:
                 self.visualizer.visualize_result(im_input, im_output, im_pred, flow, gt_motion,
                                                  'test_%d.png' % epoch)
@@ -126,20 +135,22 @@ class Demo(BaseDemo):
                 for i in range(self.batch_size):
                     self.visualizer.visualize_result(im_input, im_output, im_pred, flow, gt_motion,
                                                      'test_%d.png' % i, i)
-        test_loss = numpy.mean(numpy.asarray(test_loss))
-        base_loss = numpy.mean(numpy.asarray(base_loss))
+        test_loss = numpy.mean(numpy.asarray(test_loss_all))
+        base_loss = numpy.mean(numpy.asarray(base_loss_all))
         improve_loss = base_loss - test_loss
         improve_percent = improve_loss / (base_loss + 1e-5)
         logging.info('average test loss: %.2f, base loss: %.2f', test_loss, base_loss)
         logging.info('improve_loss: %.2f, improve_percent: %.2f', improve_loss, improve_percent)
         if motion is not None:
-            test_epe = numpy.mean(numpy.asarray(test_epe))
+            test_epe = numpy.mean(numpy.asarray(test_epe_all))
             logging.info('average test endpoint error: %.2f', test_epe)
-        return improve_percent
+        else:
+            test_epe = None
+        return test_loss, test_epe, improve_percent
 
     def test_gt(self):
-        base_loss, test_loss = [], []
-        test_epe = []
+        base_loss_all, test_loss_all = [], []
+        test_epe_all = []
         for epoch in range(self.test_epoch):
             if self.data.name in ['box', 'mnist', 'chair']:
                 im, motion, _, _ = self.data.get_next_batch(self.data.test_images)
@@ -159,15 +170,16 @@ class Demo(BaseDemo):
                 im_pred, flow = self.model_gt(im_input, im_output, gt_motion)
                 flow = flow * self.im_size / 2  # resize flow from [-1, 1] back to image scale
             im_diff = im_pred - im_input[:, -self.im_channel:, :, :]  # inverse warping loss
-            loss = torch.abs(im_diff).sum()
+            loss = torch.abs(im_diff).sum() / self.batch_size
 
-            test_loss.append(loss.data[0])
+            test_loss_all.append(loss.data[0])
             im_base = im_input[:, -self.im_channel:, :, :]
-            base_loss.append(torch.abs(im_base - im_output).sum().data[0])
+            base_loss = torch.abs(im_base - im_output).sum() / self.batch_size
+            base_loss_all.append(base_loss.data[0])
             epe = (flow - gt_motion) * (flow - gt_motion)
             epe = torch.sqrt(epe.sum(1))
             epe = epe.sum() / epe.numel()
-            test_epe.append(epe.cpu().data[0])
+            test_epe_all.append(epe.cpu().data[0])
             if self.display:
                 self.visualizer.visualize_result(im_input, im_output, im_pred, flow, gt_motion,
                                                  'test_gt.png')
@@ -175,13 +187,13 @@ class Demo(BaseDemo):
                 for i in range(self.batch_size):
                     self.visualizer.visualize_result(im_input, im_output, im_pred, flow, gt_motion,
                                                      'test_gt_%d.png' % i, i)
-        test_loss = numpy.mean(numpy.asarray(test_loss))
-        base_loss = numpy.mean(numpy.asarray(base_loss))
+        test_loss = numpy.mean(numpy.asarray(test_loss_all))
+        base_loss = numpy.mean(numpy.asarray(base_loss_all))
         improve_loss = base_loss - test_loss
         improve_percent = improve_loss / (base_loss + 1e-5)
         logging.info('average ground truth test loss: %.2f, base loss: %.2f', test_loss, base_loss)
         logging.info('improve_loss: %.2f, improve_percent: %.2f', improve_loss, improve_percent)
-        test_epe = numpy.mean(numpy.asarray(test_epe))
+        test_epe = numpy.mean(numpy.asarray(test_epe_all))
         logging.info('average ground truth test endpoint error: %.2f', test_epe)
         return improve_percent
 
