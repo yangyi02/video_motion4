@@ -141,7 +141,7 @@ class Net(nn.Module):
             x10 = self.upsample(x10)
             x11 = torch.cat((x10, x1), 1)
             x11 = F.relu(self.bn11(self.conv11(x11)))
-            m_mask = F.softmax(self.conv(x11))
+            m_mask = F.softmax(self.conv(x11), dim=1)
         elif self.net_depth == 13:
             x1 = self.bn0(im_input)
             x1 = F.relu(self.bn1(self.conv1(x1)))
@@ -175,7 +175,7 @@ class Net(nn.Module):
             x12 = self.upsample(x12)
             x13 = torch.cat((x12, x1), 1)
             x13 = F.relu(self.bn13(self.conv13(x13)))
-            m_mask = F.softmax(self.conv(x13))
+            m_mask = F.softmax(self.conv(x13), dim=1)
         elif self.net_depth == 15:
             x1 = self.bn0(im_input)
             x1 = F.relu(self.bn1(self.conv1(x1)))
@@ -214,7 +214,7 @@ class Net(nn.Module):
             x14 = self.upsample(x14)
             x15 = torch.cat((x14, x1), 1)
             x15 = F.relu(self.bn15(self.conv15(x15)))
-            m_mask = F.softmax(self.conv(x15))
+            m_mask = F.softmax(self.conv(x15), dim=1)
 
         out_mask = F.conv2d(m_mask, self.m_kernel, None, 1, self.m_range, 1, self.n_class)
         im = im_input[:, -self.im_channel:, :, :]
